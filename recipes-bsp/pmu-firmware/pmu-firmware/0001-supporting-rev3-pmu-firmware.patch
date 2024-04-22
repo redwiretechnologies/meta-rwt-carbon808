@@ -1,0 +1,145 @@
+From 78e8e0db37a9d211ae0f6804dd1351dfc0ea5c09 Mon Sep 17 00:00:00 2001
+From: tflynn <tflynn@redwiretechnologies.us>
+Date: Tue, 16 Aug 2022 13:33:18 -0400
+Subject: [PATCH] supporting rev3 pmu firmware
+
+---
+ lib/sw_apps/zynqmp_pmufw/src/pm_clock.c | 26 ++++++++++++++++++++-----
+ lib/sw_apps/zynqmp_pmufw/src/pm_defs.h  |  3 ++-
+ lib/sw_apps/zynqmp_pmufw/src/pm_hooks.c | 16 +++++++--------
+ 3 files changed, 31 insertions(+), 14 deletions(-)
+
+diff --git a/lib/sw_apps/zynqmp_pmufw/src/pm_clock.c b/lib/sw_apps/zynqmp_pmufw/src/pm_clock.c
+index 307175d0ee..9014a28035 100644
+--- a/lib/sw_apps/zynqmp_pmufw/src/pm_clock.c
++++ b/lib/sw_apps/zynqmp_pmufw/src/pm_clock.c
+@@ -45,6 +45,7 @@
+ 	.nextNode = NULL, \
+ }
+ 
++#define IOU_SLCR_WDT_CLK_SEL		(IOU_SLCR_BASE + 0x300U)
+ #define IOU_SLCR_CAN_MIO_CTRL		(IOU_SLCR_BASE + 0x304U)
+ #define IOU_SLCR_GEM_CLK_CTRL		(IOU_SLCR_BASE + 0x308U)
+ 
+@@ -2420,7 +2421,7 @@ static PmClockGen pmClockGem3Rx = {
+ 	.useCount = 0U,
+ };
+ 
+-static const PmClockSel2ClkIn fpdWdtSel2ClkIn[] = {
++static const PmClockSel2ClkIn wdtSel2ClkIn[] = {
+ 	{
+ 		.clkIn = &pmClockTopSwLsBus.base,
+ 		.select = 0U,
+@@ -2429,9 +2430,9 @@ static const PmClockSel2ClkIn fpdWdtSel2ClkIn[] = {
+ 		.select = 1U,
+ 	},
+ };
+-static PmClockMux fpdWdtMux = {
+-	.inputs = fpdWdtSel2ClkIn,
+-	.size = ARRAY_SIZE(fpdWdtSel2ClkIn),
++static PmClockMux wdtMux = {
++    .inputs = wdtSel2ClkIn,
++    .size = ARRAY_SIZE(wdtSel2ClkIn),
+ 	.bits = 1U,
+ 	.shift = 0U,
+ };
+@@ -2443,13 +2444,27 @@ static PmClockGen pmClockFpdWdt = {
+ 	},
+ 	.parent = NULL,
+ 	.users = NULL,
+-	.mux = &fpdWdtMux,
++    .mux = &wdtMux,
+ 	.ctrlAddr = FPD_SLCR_WDT_CLK_SEL,
+ 	.ctrlVal = 0U,
+ 	.type = 0U,
+ 	.useCount = 0U,
+ };
+ 
++static PmClockGen pmClockLpdWdt = {
++    .base = {
++        .derived = &pmClockLpdWdt,
++        .class = &pmClockClassGen,
++        .id = PM_CLOCK_LPD_WDT,
++    },
++    .parent = NULL,
++    .users = NULL,
++    .mux = &wdtMux,
++    .ctrlAddr = IOU_SLCR_WDT_CLK_SEL,
++    .ctrlVal = 0U,
++    .type = 0U,
++    .useCount = 0U,
++};
+ #ifdef ENABLE_POS
+ static PmClockGen* pmDdrClocks [] = {
+ 	&pmClockDdr,
+@@ -2541,6 +2556,7 @@ static PmClock* pmClocks[] = {
+ 	&pmClockGem2Rx.base,
+ 	&pmClockGem3Rx.base,
+ 	&pmClockFpdWdt.base,
++    &pmClockLpdWdt.base,
+ };
+ 
+ static PmClockHandle pmClockHandles[] = {
+diff --git a/lib/sw_apps/zynqmp_pmufw/src/pm_defs.h b/lib/sw_apps/zynqmp_pmufw/src/pm_defs.h
+index 01c77d7b82..0486a552b9 100644
+--- a/lib/sw_apps/zynqmp_pmufw/src/pm_defs.h
++++ b/lib/sw_apps/zynqmp_pmufw/src/pm_defs.h
+@@ -515,8 +515,9 @@ extern "C" {
+ #define PM_CLOCK_GEM1_REF_UNGATED	109U
+ #define PM_CLOCK_GEM2_REF_UNGATED	110U
+ #define PM_CLOCK_GEM3_REF_UNGATED	111U
++#define PM_CLOCK_LPD_WDT		112U
+ 
+-#define PM_CLOCK_EXT_BASE		112U
++#define PM_CLOCK_EXT_BASE		113U
+ #define PM_CLOCK_EXT_PSS_REF		(PM_CLOCK_EXT_BASE + 0U)
+ #define PM_CLOCK_EXT_VIDEO		(PM_CLOCK_EXT_BASE + 1U)
+ #define PM_CLOCK_EXT_PSS_ALT_REF	(PM_CLOCK_EXT_BASE + 2U)
+diff --git a/lib/sw_apps/zynqmp_pmufw/src/pm_hooks.c b/lib/sw_apps/zynqmp_pmufw/src/pm_hooks.c
+index 321652b9ca..ecce528b5a 100644
+--- a/lib/sw_apps/zynqmp_pmufw/src/pm_hooks.c
++++ b/lib/sw_apps/zynqmp_pmufw/src/pm_hooks.c
+@@ -36,7 +36,7 @@
+ 
+ #ifdef ENABLE_POS
+ #define IOU_SCLR_MIO_PIN_26	( ( IOU_SLCR_BASE )  + 0X00000068U )
+-#define IOU_SCLR_MIO_PIN_34	( ( IOU_SLCR_BASE )  + 0X00000088U )
++#define IOU_SCLR_MIO_PIN_24	( ( IOU_SLCR_BASE )  + 0X00000060U )
+ #define IOU_SCLR_MIO_PIN_37	( ( IOU_SLCR_BASE )  + 0X00000094U )
+ #define IOU_SCLR_MIO_MST_TRI0	( ( IOU_SLCR_BASE )  + 0X00000204U )
+ #define IOU_SCLR_MIO_MST_TRI1	( ( IOU_SLCR_BASE )  + 0X00000208U )
+@@ -126,13 +126,13 @@ void PmHookPowerDownLpd(void)
+ {
+ 	u32 reg;
+ 
+-	/* Drive MIO34 (LPD power down request pin) low */
++	/* Drive MIO24 (LPD power down request pin) low */
+ 	reg = XPfw_Read32(PMU_LOCAL_GPO1_READ);
+ 	reg &= ~PMU_IOMODULE_GPO1_MIO_2_MASK;
+ 	XPfw_Write32(PMU_IOMODULE_GPO1, reg);
+ #ifndef CONNECT_PMU_GPO_2
+-	/* Configure MIO34 to be controlled by the PMU */
+-	XPfw_RMW32((IOU_SLCR_BASE + IOU_SLCR_MIO_PIN_34_OFFSET),
++	/* Configure MIO24 to be controlled by the PMU */
++	XPfw_RMW32((IOU_SLCR_BASE + IOU_SLCR_MIO_PIN_24_OFFSET),
+ 			0x000000FEU, 0x00000008U);
+ #endif
+ }
+@@ -155,13 +155,13 @@ void PmHookInitPowerOffSuspend(void)
+ {
+ 	u32 reg;
+ 
+-	/* Drive MIO34 (LPD power down request pin) high */
++	/* Drive MIO24 (LPD power down request pin) high */
+ 	reg = XPfw_Read32(PMU_LOCAL_GPO1_READ);
+ 	reg |= PMU_IOMODULE_GPO1_MIO_2_MASK;
+ 	XPfw_Write32(PMU_IOMODULE_GPO1, reg);
+-	/* Configure MIO34 to be controlled by the PMU */
+-	XPfw_RMW32(IOU_SCLR_MIO_PIN_34, 0x000000FEU ,0x00000008U);
+-	/* Configure MIO34 tri-state enable */
++	/* Configure MIO24 to be controlled by the PMU */
++	XPfw_RMW32(IOU_SCLR_MIO_PIN_24, 0x000000FEU ,0x00000008U);
++	/* Configure MIO24 tri-state enable */
+ 	XPfw_RMW32(IOU_SCLR_MIO_MST_TRI1, 0x00000004U ,0x00000000U);
+ }
+ 

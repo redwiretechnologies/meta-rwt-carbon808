@@ -1,0 +1,35 @@
+From 00aa23f0b5a8deef8b2e8a275e307b34fa0805af Mon Sep 17 00:00:00 2001
+From: tflynn <tflynn@redwiretechnologies.us>
+Date: Fri, 15 Jul 2022 12:08:46 -0400
+Subject: [PATCH] fixing shutdown to power down on MIO32
+
+---
+ lib/sw_apps/zynqmp_pmufw/src/xpfw_config.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/lib/sw_apps/zynqmp_pmufw/src/xpfw_config.h b/lib/sw_apps/zynqmp_pmufw/src/xpfw_config.h
+index a2fa2eefed..e9548a52a2 100644
+--- a/lib/sw_apps/zynqmp_pmufw/src/xpfw_config.h
++++ b/lib/sw_apps/zynqmp_pmufw/src/xpfw_config.h
+@@ -142,9 +142,9 @@ extern "C" {
+ #define DISABLE_CLK_PERMS_VAL				(0U)
+ #define ENABLE_UNUSED_RPU_PWR_DWN_VAL			(1U)
+ 
+-#define	PMU_MIO_INPUT_PIN_VAL			(0U)
+-#define	BOARD_SHUTDOWN_PIN_VAL			(0U)
+-#define	BOARD_SHUTDOWN_PIN_STATE_VAL	(0U)
++#define	PMU_MIO_INPUT_PIN_VAL			(1U)
++#define	BOARD_SHUTDOWN_PIN_VAL			(1U)
++#define	BOARD_SHUTDOWN_PIN_STATE_VAL	(1U)
+ 
+ #define CONNECT_PMU_GPO_2_VAL			(1U)
+ #define CONNECT_PMU_GPO_3_VAL			(1U)
+@@ -306,7 +306,7 @@ extern "C" {
+ #endif
+ 
+ #if BOARD_SHUTDOWN_PIN_VAL
+-#define BOARD_SHUTDOWN_PIN			2U
++#define BOARD_SHUTDOWN_PIN			1U
+ #endif
+ 
+ #if BOARD_SHUTDOWN_PIN_STATE_VAL
