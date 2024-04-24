@@ -13,7 +13,7 @@ export HOST_SYS="${MULTIMACH_TARGET_SYS}"
 
 S="${WORKDIR}/git"
 
-SRC_URI = "git://git@github.com/redwiretechnologies/gr-carbon.git;branch=maint-3.10;protocol=ssh"
+SRC_URI = "git://github.com/redwiretechnologies/gr-carbon.git;branch=maint-3.10;protocol=https"
 SRCREV = "006e0cacd943cdd546c1ca1b678a90903cee1af9"
 
 EXTRA_OECMAKE = " \
