@@ -14,7 +14,7 @@ export HOST_SYS="${MULTIMACH_TARGET_SYS}"
 S="${WORKDIR}/git"
 
 SRC_URI = "git://github.com/redwiretechnologies/gr-carbon.git;branch=maint-3.10;protocol=https"
-SRCREV = "006e0cacd943cdd546c1ca1b678a90903cee1af9"
+SRCREV = "8588fb1610b9f3c6258b991cac5db843ce340791"
 
 EXTRA_OECMAKE = " \
     -DGR_PYTHON_DIR=${PYTHON_SITEPACKAGES_DIR} \
