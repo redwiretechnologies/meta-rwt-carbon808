@@ -1,9 +1,9 @@
 FPGA_MNGR_RECONFIG_ENABLE = '1'
 # specify BIF common attribute for FSBL
 BIF_COMMON_ATTR = ""
-BIF_DEVICETREE_ATTR = "device-tree-carbon803"
+BIF_DEVICETREE_ATTR = "device-tree-carbon808"
 # specify BIF partition attributes required for BOOT.bin
-BIF_PARTITION_ATTR:zynqmp = "fsbl pmufw arm-trusted-firmware u-boot-xlnx"
+BIF_PARTITION_ATTR:zynqmp = "fsbl pmufw arm-trusted-firmware device-tree-carbon808 u-boot-xlnx"
 
 # specify BIF partition attributes for FSBL
 # bootloader is FSBL. Location where FSBL binary is present and dependency to build FSBL
@@ -30,3 +30,7 @@ BIF_PARTITION_IMAGE[arm-trusted-firmware] ?= "${RECIPE_SYSROOT}/boot/arm-trusted
 BIF_PARTITION_ATTR[u-boot-xlnx] = "destination_cpu=a53-0,exception_level=el-2"
 BIF_PARTITION_IMAGE[u-boot-xlnx] = "${DEPLOY_DIR_IMAGE}/u-boot-${MACHINE}.elf"
 BIF_PARTITION_DEPENDS[u-boot-xlnx] = "virtual/bootloader:do_deploy"
+
+# specify BIF partition attributes for dtb
+BIF_PARTITION_ATTR[device-tree-carbon808] ?= "destination_cpu=a53-0,load=0x100000"
+BIF_PARTITION_IMAGE[device-tree-carbon808] ?= "${RECIPE_SYSROOT}/boot/devicetree/carbon808.dtb"

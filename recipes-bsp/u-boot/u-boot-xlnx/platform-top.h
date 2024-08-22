@@ -18,7 +18,6 @@
     "sdboot=run append_fpgadev && run loadbitfile && run loadkernel && run loaddtb && booti ${kernel_load_address} - ${devicetree_load_address}\0" \
     "modeboot=sdboot\0"
 
-
 #include <configs/xilinx_zynqmp.h>
 
 

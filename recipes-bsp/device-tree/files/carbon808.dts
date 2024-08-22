@@ -48,6 +48,27 @@
         #address-cells = <0x1>;
         #size-cells = <0x1>;
         ranges = <0 0 0 0xffffffff>;
+        
+        bram_ctrl: axi_bram_ctrl@9f000000 {
+                        clock-names = "s_axi_aclk";
+                        clocks = <&zynqmp_clk 71>;
+                        compatible = "xlnx,axi-bram-ctrl-4.1";
+                        reg = <0x0 0x9f000000 0x0 0x1000>;
+                        xlnx,bram-addr-width = <0xa>;
+                        xlnx,bram-inst-mode = "EXTERNAL";
+                        xlnx,ecc = <0x0>;
+                        xlnx,ecc-onoff-reset-value = <0x0>;
+                        xlnx,ecc-type = <0x0>;
+                        xlnx,fault-inject = <0x0>;
+                        xlnx,memory-depth = <0x400>;
+                        xlnx,rd-cmd-optimization = <0x0>;
+                        xlnx,read-latency = <0x1>;
+                        xlnx,s-axi-ctrl-addr-width = <0x20>;
+                        xlnx,s-axi-ctrl-data-width = <0x20>;
+                        xlnx,s-axi-id-width = <0x1>;
+                        xlnx,s-axi-supports-narrow-burst = <0x0>;
+                        xlnx,single-port-bram = <0x1>;
+                };
 
     };
     refclk4: psgtr_dp_clock {
@@ -81,55 +102,50 @@
         clock-names = "ref0", "ref1", "ref2", "ref3";
 };
 
+/*-------------------- QSPI ---------------------*/
 &qspi {
-    #address-cells = <1>;
-    #size-cells = <0>;
-    flash0: flash@0 {
-        compatible = "n25q512a","micron,m25p80";
-        spi-tx-bus-width=<1>;
-        spi-rx-bus-width=<4>;
-        reg = <0x0>;
+    num-cs = <2>;
+ 
+    flash@0 {
+        compatible = "jedec,spi-nor";
+        reg = <0>, <1>;
+        parallel-memories = /bits/ 64 <0x1000000 0x1000000>; /* 2* 16MB --> dummy for all types of this QSPI type */
+ 
+        spi-rx-bus-width = <4>;
+        spi-tx-bus-width = <4>;
+        spi-max-frequency = <40000000>; //40MHz no real feedback pin
+         
         #address-cells = <1>;
-        #size-cells = <1>;
-        spi-max-frequency = <108000000>;
-        partition@0x00000000 {
-            label = "boot";
-            reg = <0x00000000 0x00100000>;
-        };
-        partition@0x00100000 {
-            label = "bootenv";
-            reg = <0x00100000 0x00040000>;
-        };
-        partition@0x00140000 {
-            label = "kernel";
-            reg = <0x00140000 0x01600000>;
-        };
+        #size-cells = <1>;       
     };
 };
-
-
 
 
 
 /* SDIO */
 &sdhci0 {
-   status = "disabled";
+    // disable-wp;
+    no-1-8-v;
 };
+
 &sdhci1 {
    disable-wp;
    no-1-8-v;
-   /* broken-adma2; */
+   status = "okay";
+  /* xlnx,mio-bank = <1>;
+  /* broken-adma2; */
 };
 
+/* QSPI PHY */
 &qspi {
     #address-cells = <1>;
     #size-cells = <0>;
     flash0: flash@0 {
-         compatible = "jedec,spi-nor";
+        compatible = "jedec,spi-nor";
         reg = <0x0>;
         #address-cells = <1>;
         #size-cells = <1>;
-    };
+   };
 };
 
 
@@ -164,15 +180,18 @@
 //	status = "disabled";
 //};
 
+&usb0 {
+	status = "ok";
+    phy-names = "usb3-phy";
+    phys = <&psgtr 2 PHY_TYPE_USB3 0 3>;
+   /* phys = <&lane2 4 0 3 100000000>;*/
+};
+
 &dwc3_0 {
     status = "disabled";
     dr_mode = "peripheral";
     maximum-speed = "super-speed";
     snps,usb3_lpm_capable;
-    snps,dis_u3_susphy_quirk;
-    snps,dis_u2_susphy_quirk;
-    phy-names = "usb3-phy";
-    phys = <&psgtr 2 PHY_TYPE_USB3 0 3>;
 };
 
 //&dwc3_1 {
@@ -185,46 +204,35 @@
 //};
 
 &i2c1 {
-    eeprom@50 {
-      compatible = "at24,24c02";
-      reg = <0x50>;
-    };
-    eeprom@51 {
-      compatible = "at24,24c02";
-      reg = <0x51>;
-    };
-    eeprom@52 {
-      compatible = "at24,24c02";
-      reg = <0x52>;
-    };
+
     pac193x@1A {
         compatible = "microchip,pac1934";
         reg = <0x1A>;
         samp-rate = <64>;
         status = "okay";
 
-        ch1: channel@0 {
-            uohms-shunt-res = <22000>; /* shunt resistor is 22 milliohm */
-            rail-name = "Battery";
-            channel_enabled;
+        ch1: channel@1 {
+            reg = <0x1>;
+            shunt-resistor-micro-ohms  = <22000000>; /* shunt resistor is 22 milliohm */
+            label = "Battery";
          };
 
-        ch2: channel@1 {
-            uohms-shunt-res = <22000>; /* shunt resistor is 22 milliohm */
-            rail-name = "External_USB_C_PD";
-            channel_enabled;
+        ch2: channel@2 {
+            reg = <0x2>;
+            shunt-resistor-micro-ohms  = <22000000>; /* shunt resistor is 22 milliohm */
+            label = "External_USB_C_PD";
         };
 
-        ch3: channel@2 {
-            uohms-shunt-res = <5000>; /* shunt resistor is 5 milliohm */
-            rail-name = "USB_C_DRP_Out";
-            channel_enabled;
+        ch3: channel@3 {
+            reg = <0x3>;
+            shunt-resistor-micro-ohms  = <5000000>; /* shunt resistor is 5 milliohm */
+            label = "USB_C_DRP_Out";
             };
 
-         ch4: channel@3 {
-            uohms-shunt-res = <5000>; /* shunt resistor is 5 milliohm */
-            rail-name = "Main_3_3V_Bus";
-            channel_enabled;
+         ch4: channel@4 {
+            reg = <0x4>;
+            shunt-resistor-micro-ohms  = <5000000>; /* shunt resistor is 5 milliohm */
+            label = "Main_3_3V_Bus";
             };
     };
     pac193x@1B {
@@ -233,28 +241,28 @@
         samp-rate = <64>;
         status = "okay";
 
-        ch5: channel@0 {
-            uohms-shunt-res = <5000>; /* shunt resistor is 5 milliohm */
-            rail-name = "SOM";
-            channel_enabled;
+        ch5: channel@1 {
+            reg = <0x1>;
+            shunt-resistor-micro-ohms  = <5000000>; /* shunt resistor is 5 milliohm */
+            label = "SOM";
          };
 
-        ch6: channel@1 {
-            uohms-shunt-res = <5000>; /* shunt resistor is 5 milliohm */
-            rail-name = "AD936x_BoardA";
-            channel_enabled;
+        ch6: channel@2 {
+            reg = <0x2>;
+            shunt-resistor-micro-ohms  = <5000000>; /* shunt resistor is 5 milliohm */
+            label = "AD936x_BoardA";
         };
 
-        ch7: channel@2 {
-            uohms-shunt-res = <5000>; /* shunt resistor is 5 milliohm */
-            rail-name = "AD936x_BoardB";
-            channel_enabled;
+        ch7: channel@3 {
+            reg = <0x3>;
+            shunt-resistor-micro-ohms  = <5000000>; /* shunt resistor is 5 milliohm */
+            label = "AD936x_BoardB";
         };
 
-        ch8: channel@3 {
-            uohms-shunt-res = <5000>; /* shunt resistor is 5 milliohm */
-            rail-name = "1_8V_BUS";
-            channel_enabled;
+        ch8: channel@4 {
+            reg = <0x4>;
+            shunt-resistor-micro-ohms  = <5000000>; /* shunt resistor is 5 milliohm */
+            label = "1_8V_BUS";
         };
     
     };
@@ -264,22 +272,22 @@
         samp-rate = <64>;
         status = "okay";
 
-        ch9: channel@0 {
-            uohms-shunt-res = <5000>; /* shunt resistor is 5 milliohm */
-            rail-name = "5V_TO_DOCK";
-            channel_enabled;
+        ch9: channel@1 {
+            reg = <0x1>;
+            shunt-resistor-micro-ohms  = <5000000>; /* shunt resistor is 5 milliohm */
+            label = "5V_TO_DOCK";
          };
 
-        ch10: channel@1 {
-            uohms-shunt-res = <5000>; /* shunt resistor is 5 milliohm */
-            rail-name = "3_3V_TO_DOCK";
-            channel_enabled;
+        ch10: channel@2 {
+            reg = <0x2>;
+            shunt-resistor-micro-ohms  = <5000000>; /* shunt resistor is 5 milliohm */
+            label = "3_3V_TO_DOCK";
         };
 
-        ch11: channel@2 {
-            uohms-shunt-res = <5000>; /* shunt resistor is 5 milliohm */
-            rail-name = "1_8V_TO_DOCK";
-            channel_enabled;
+        ch11: channel@3 {
+            reg = <0x3>;
+            shunt-resistor-micro-ohms  = <5000000>; /* shunt resistor is 5 milliohm */
+            label = "1_8V_TO_DOCK";
         };
     
     };
