@@ -181,7 +181,7 @@
 //};
 
 &usb0 {
-	status = "ok";
+	status = "okay";
     phy-names = "usb3-phy";
     phys = <&psgtr 2 PHY_TYPE_USB3 0 3>;
    /* phys = <&lane2 4 0 3 100000000>;*/
