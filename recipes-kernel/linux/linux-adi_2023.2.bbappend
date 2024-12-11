@@ -7,6 +7,7 @@ SRC_URI += "file://usbmods.cfg \
             file://pci_usb3380.cfg \
             file://power.cfg  \
             file://crypto.cfg \
+            file://intelwifi.cfg \
             file://devtool-fragment.cfg \
             file://0001-adding-powe-support.patch \
             file://0001-adding-pac193x-patch.patch \

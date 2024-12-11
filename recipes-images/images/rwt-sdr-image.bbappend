@@ -25,4 +25,7 @@ CORE_IMAGE_EXTRA_INSTALL += "\
     python3-pyadi-iio \
     dtc \
     device-tree-carbon808 \
+    linux-firmware-iwlwifi \
+    linux-firmware-ibt \
+    linux-firmware \
 "
