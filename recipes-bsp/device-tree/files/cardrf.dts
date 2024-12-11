@@ -1,0 +1,38 @@
+/dts-v1/;
+/plugin/;
+
+
+/ {
+    fragment@0 {
+        target = <&i2c0>;
+        __overlay__ {
+                    pa-temp-sensor@18 {
+                    compatible = "jedec,jc-42.4-temp";
+                    reg = <0x18>;
+                    };
+
+                    /* Looking at the driver, this doesn't support the latch registers.
+
+                        The latest driver (in kernel v5.2.3) does support latch, but we
+                        would need to add the following ID:
+                        { "pcal6408", 8 | PCA953X_TYPE | PCA_LATCH_INT, },
+                    */
+                    pca9534@22 {
+                                compatible = "nxp,pcal6524";
+                                reg = <0x22>;
+                                gpio-controller;
+                                #gpio-cells = <2>;
+                                interrupt-parent = <&gpio>;
+                                interrupts = <81 8>; /* IRQ_TYPE_EDGE_FALLING */
+                                gpio-line-names = "LNA1_EN", "LNA2_EN", "LNA3_EN", "LNA4_EN",
+                                                    "M2_A_BT_EN", "M2_A_WIFI_EN", "M2_B_BT_EN", "M2_B_WIFI_EN",     "TXA_PA_EN",
+                                                    "TXB_PA_EN", "RX_FILT_C2", "TX_INHIB", "RX_FILT_C1", "CAL_TX_SEL",
+                                                    "CAL_RX_SEL", "RX_CAL_EN", "LNA1_FLTn",
+                                                    "LNA2_FLTn", "LNA3_FLTn", "LNA4_FLTn", "TXA_PA1_FLTn",
+                                                    "TXA_PA2_FLTn", "TXB_PA1_FLTn", "TXB_PA2_FLTn";
+                                };
+        };
+    };
+
+    
+};

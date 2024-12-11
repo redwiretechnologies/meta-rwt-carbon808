@@ -25,4 +25,5 @@ SRC_URI = " \
         file://carbon808.dts \
         file://usb-host.dts \
         file://usb-peripheral.dts \
+        file://cardf.dts \
 "
