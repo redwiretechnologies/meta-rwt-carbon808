@@ -28,4 +28,5 @@ CORE_IMAGE_EXTRA_INSTALL += "\
     linux-firmware-iwlwifi \
     linux-firmware-ibt \
     linux-firmware \
+    ethtool \
 "
